@@ -13,4 +13,6 @@ void main()
 	vertexColor = vec4(aColor, 1.0f);
 	// resulting position of the vertex
 	gl_Position = vec4(aPos.x * scaler, aPos.y * scaler, aPos.z * scaler, 1.0f);
+
+	// another one
 }
