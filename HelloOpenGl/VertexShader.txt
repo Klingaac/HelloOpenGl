@@ -9,6 +9,7 @@ uniform float scaler;
 
 void main()
 {
+	// vertex color is a color assing manually to this specific vertex
 	vertexColor = vec4(aColor, 1.0f);
 	gl_Position = vec4(aPos.x * scaler, aPos.y * scaler, aPos.z * scaler, 1.0f);
 }
