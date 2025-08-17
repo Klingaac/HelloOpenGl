@@ -107,16 +107,6 @@ int main()
 	GLuint texture1{ createTexture("ajwm5.png", GL_TEXTURE1, GL_RGBA) };
 
 
-	// Math
-	// ====
-
-	glm::vec4 vec(1.0f, 0.0f, 0.0f, 1.0f);
-	glm::mat4 trans = glm::mat4(1.0f);
-	trans = glm::translate(trans, glm::vec3(1.0f, 1.0f, 0.0f));
-	vec = trans * vec;
-	std::cout << vec.x << vec.y << vec.z << std::endl;
-
-
 	// Render loop
 	// ===========
 
@@ -144,9 +134,17 @@ int main()
 		float sinValue = (sin(timeValue) / 2.0f) + 0.5f;
 		shader.setFloat("sinValue", sinValue);
 
+		// Math
 		float scaler{ 1.0f };
-		shader.setFloat("scaler", scaler);
 
+		glm::mat4 trans = glm::mat4(1.0f);
+		trans = glm::rotate(trans, static_cast<float>(glfwGetTime()), glm::vec3(0.0f, 0.0f, 1.0f));
+		trans = glm::scale(trans, glm::vec3(scaler, scaler, scaler));
+
+		shader.setMat4("transform", trans);
+
+
+		// Textures
 		glActiveTexture(GL_TEXTURE0);
 		glBindTexture(GL_TEXTURE_2D, texture0);
 		shader.setInt("texture0", 0);

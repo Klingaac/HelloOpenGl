@@ -71,8 +71,8 @@
   </ImportGroup>
   <PropertyGroup Label="UserMacros" />
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">
-    <IncludePath>C:\Users\Deniska\Documents\Projects\C++\OpenGL\includes;$(IncludePath)</IncludePath>
-    <LibraryPath>C:\Users\Deniska\Documents\Projects\C++\OpenGL\lib;$(LibraryPath)</LibraryPath>
+    <IncludePath>C:\Users\marti\OneDrive\Dokumenty\Projects\C++\OpenGL\includes;$(IncludePath)</IncludePath>
+    <LibraryPath>C:\Users\marti\OneDrive\Dokumenty\Projects\C++\OpenGL\lib;$(LibraryPath)</LibraryPath>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|x64'">
     <IncludePath>C:\Users\marti\OneDrive\Dokumenty\Projects\C++\OpenGL\includes;$(IncludePath)</IncludePath>
