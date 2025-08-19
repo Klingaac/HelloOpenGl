@@ -10,6 +10,7 @@
 
 #include "shader.h"
 #include "stb_image.h"
+#include "camera.h"
 
 GLFWwindow* getWindow();
 
@@ -19,10 +20,12 @@ bool programStatus(GLuint program);
 
 void framebuffer_size_callback(GLFWwindow* window, int width, int height);
 void processInput(GLFWwindow* window);
+void mouse_callback(GLFWwindow* window, double xpos, double ypos);
+void scroll_callback(GLFWwindow* window, double xoffset, double yoffset);
 GLuint createTexture(const char* location, GLenum textureUnit, GLenum colorFormat);
 
-constexpr int width = 1200;
-constexpr int height = 800;
+float width = 1200;
+float height = 800;
 
 // Resources
 // =========
@@ -86,10 +89,22 @@ constexpr glm::vec3 cubePositions[] = {
 
 constexpr int numOfTraingles{ 36 };
 
+// Non const globals
+
+float deltaTime{ 0.0f };
+float lastFrame{ 0.0f };
+
+// i have NO idea how the camera works
+bool firstMouse = true;
+float lastX = width / 2.0;
+float lastY = height / 2.0;
+float fov = 45.0f;
+
+Camera camera;
+
 
 int main()
 {
-
 	// Initialization
 	// ==============
 
@@ -102,6 +117,8 @@ int main()
 	glViewport(0, 0, width, height);
 	// Bind to resize viewport on window resizing
 	glfwSetFramebufferSizeCallback(window, framebuffer_size_callback);
+	glfwSetCursorPosCallback(window, mouse_callback);
+	glfwSetScrollCallback(window, scroll_callback);
 
 	// Get the shader program
 	Shader shader("VertexShader.txt", "FragmentShader.txt");
@@ -146,6 +163,8 @@ int main()
 	// Render loop
 	// ===========
 
+	glfwSetInputMode(window, GLFW_CURSOR, GLFW_CURSOR_DISABLED);
+
 	// Set which color the window will turn into when cleared
 	glClearColor(0.2f, 0.3f, 0.5f, 1.0f);
 	glEnable(GL_DEPTH_TEST);
@@ -157,6 +176,12 @@ int main()
 	{
 		// Get input to close window
 		processInput(window);
+		camera.ProcessKeyboard(window, deltaTime);
+
+		// Calculate deltaTime
+		float currentFrame{ static_cast<float>(glfwGetTime()) };
+		deltaTime = currentFrame - lastFrame;
+		lastFrame = currentFrame;
 
 		// Rendering
 		// =========
@@ -170,15 +195,13 @@ int main()
 		float scaler{ 1.0f };
 
 		glm::mat4 model = glm::mat4(1.0f);
-		model = glm::rotate(model, glm::radians(-55.0f), glm::vec3(1.0f, 0.0f, 0.0f));
+		// diff rotation depending on time
 		model = glm::rotate(model, (float)glfwGetTime() * glm::radians(50.0f), glm::vec3(0.5f, 1.0f, 0.0f));
 
-		glm::mat4 view = glm::mat4(1.0f);
-		// note that we're translating the scene in the reverse direction of where we want to move
-		view = glm::translate(view, glm::vec3(0.0f, 0.0f, -3.0f));
+		glm::mat4 view = camera.GetViewMatrix();
 
 		glm::mat4 projection;
-		projection = glm::perspective(glm::radians(45.0f), 800.0f / 600.0f, 0.1f, 100.0f);
+		projection = glm::perspective(glm::radians(fov), 800.0f / 600.0f, 0.1f, 100.0f);
 
 
 		// Uniforms
@@ -273,8 +296,10 @@ bool GLADstatus()
 }
 
 // Resize viewport on window resizing
-void framebuffer_size_callback(GLFWwindow* window, int width, int height)
+void framebuffer_size_callback(GLFWwindow* window, int new_width, int new_height)
 {
+	width = new_width;
+	height = new_height;
 	glViewport(0, 0, width, height);
 }
 
@@ -321,7 +346,36 @@ GLuint createTexture(const char* location, GLenum textureUnit, GLenum colorForma
 	return texture;
 }
 
-void hi()
+void mouse_callback(GLFWwindow* window, double xposIn, double yposIn)
 {
+	
+	float xpos = static_cast<float>(xposIn);
+	float ypos = static_cast<float>(yposIn);
 
+	if (firstMouse)
+	{
+		lastX = xpos;
+		lastY = ypos;
+		firstMouse = false;
+	}
+
+	float xoffset = xpos - lastX;
+	float yoffset = lastY - ypos; // reversed since y-coordinates go from bottom to top
+	lastX = xpos;
+	lastY = ypos;
+
+	std::cout << xoffset << '\n';
+	camera.ProcessMouseMovement(xoffset, yoffset);
+}
+
+// glfw: whenever the mouse scroll wheel scrolls, this callback is called
+// ----------------------------------------------------------------------
+void scroll_callback(GLFWwindow* window, double xoffset, double yoffset)
+{
+	fov -= (float)yoffset;
+	if (fov < 1.0f)
+		fov = 1.0f;
+	if (fov > 45.0f)
+		fov = 45.0f;
+	camera.ProcessMouseScroll(yoffset);
 }
