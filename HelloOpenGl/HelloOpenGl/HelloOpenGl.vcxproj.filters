@@ -43,10 +43,10 @@
     </ClInclude>
   </ItemGroup>
   <ItemGroup>
-    <Text Include="VertexShader.txt">
+    <Text Include="VertexShader.vert">
       <Filter>Resource Files\Shaders</Filter>
     </Text>
-    <Text Include="FragmentShader.txt">
+    <Text Include="FragmentShader.frag">
       <Filter>Resource Files\Shaders</Filter>
     </Text>
   </ItemGroup>
@@ -57,5 +57,10 @@
     <Image Include="ajwm5.png">
       <Filter>Resource Files\Textures</Filter>
     </Image>
+  </ItemGroup>
+  <ItemGroup>
+    <None Include="LightSourceFragment.frag">
+      <Filter>Resource Files\Shaders</Filter>
+    </None>
   </ItemGroup>
 </Project>

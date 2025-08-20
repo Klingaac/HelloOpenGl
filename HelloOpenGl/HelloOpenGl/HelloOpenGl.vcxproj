@@ -145,12 +145,15 @@
     <ClInclude Include="stb_image.h" />
   </ItemGroup>
   <ItemGroup>
-    <Text Include="FragmentShader.txt" />
-    <Text Include="VertexShader.txt" />
+    <Text Include="FragmentShader.frag" />
+    <Text Include="VertexShader.vert" />
   </ItemGroup>
   <ItemGroup>
     <Image Include="ajwm5.png" />
     <Image Include="container.jpg" />
+  </ItemGroup>
+  <ItemGroup>
+    <None Include="LightSourceFragment.frag" />
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
   <ImportGroup Label="ExtensionTargets">

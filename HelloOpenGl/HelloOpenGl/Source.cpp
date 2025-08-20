@@ -24,8 +24,8 @@ void mouse_callback(GLFWwindow* window, double xpos, double ypos);
 void scroll_callback(GLFWwindow* window, double xoffset, double yoffset);
 GLuint createTexture(const char* location, GLenum textureUnit, GLenum colorFormat);
 
-float width = 1200;
-float height = 800;
+float width = 1200.0f;
+float height = 800.0f;
 
 // Resources
 // =========
@@ -87,6 +87,7 @@ constexpr glm::vec3 cubePositions[] = {
 	glm::vec3(-1.3f,  1.0f, -1.5f)
 };
 
+constexpr int numOfCubes{ 10 };
 constexpr int numOfTraingles{ 36 };
 
 // Non const globals
@@ -96,12 +97,14 @@ float lastFrame{ 0.0f };
 
 // i have NO idea how the camera works
 bool firstMouse = true;
-float lastX = width / 2.0;
-float lastY = height / 2.0;
+float lastX = width / 2.0f;
+float lastY = height / 2.0f;
 float fov = 45.0f;
 
 Camera camera;
 
+// lighting
+glm::vec3 lightPos(1.2f, 1.0f, 2.0f);
 
 int main()
 {
@@ -114,45 +117,46 @@ int main()
 		return 1;
 
 	// Viewport size, should be same as window
-	glViewport(0, 0, width, height);
+	glViewport(0, 0, static_cast<int>(width), static_cast<int>(height));
 	// Bind to resize viewport on window resizing
 	glfwSetFramebufferSizeCallback(window, framebuffer_size_callback);
 	glfwSetCursorPosCallback(window, mouse_callback);
 	glfwSetScrollCallback(window, scroll_callback);
 
 	// Get the shader program
-	Shader shader("VertexShader.txt", "FragmentShader.txt");
+	Shader cubeShader("VertexShader.vert", "FragmentShader.frag");
+	Shader lightSourceShader("VertexShader.vert", "LightSourceFragment.frag");
 
 	// Buffers
 	// =======
-
-	// Create a vertex array object to store a VBO and vertex attrib pointers that i'll use
-	GLuint VAO;
-	glGenVertexArrays(1, &VAO);
-	glBindVertexArray(VAO);
-
-	// Create a vertex buffer object to hold all vertices
-	GLuint VBO;
+	
+	// first we do the cubeVAO and also create universal VBO with vertices
+	GLuint VBO, cubeVAO;
+	glGenVertexArrays(1, &cubeVAO);
 	glGenBuffers(1, &VBO);
+
 	glBindBuffer(GL_ARRAY_BUFFER, VBO);
 	glBufferData(GL_ARRAY_BUFFER, sizeof(vertices), vertices, GL_STATIC_DRAW);
 
-	// Tell vertex shader how to interpret data in VBO
-	// vertex positions
-	glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 5 * sizeof(float), (void*)0);
-	glEnableVertexAttribArray(0);
-	// texture coordinates
-	glVertexAttribPointer(1, 2, GL_FLOAT, GL_FALSE, 5 * sizeof(float), (void*)(3 * sizeof(float)));
-	glEnableVertexAttribArray(1);
-	
+	glBindVertexArray(cubeVAO);
 
-	// Unbind buffers until we need to use them (in the render loop)
-	glBindBuffer(GL_ARRAY_BUFFER, 0);
-	glBindVertexArray(0);
+	// position attrib
+	glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, sizeof(float) * 5, (void*)0);
+	glEnableVertexAttribArray(0);
+
+	// secondly we make the lightSourceVAO for the lightsource
+	GLuint lightSourceVAO;
+	glGenVertexArrays(1, &lightSourceVAO);
+	glBindVertexArray(lightSourceVAO);
+
+	glBindBuffer(GL_ARRAY_BUFFER, VBO);
+
+	glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, sizeof(float) * 5, (void*)0);
+	glEnableVertexAttribArray(0);
+
 
 	// Textures
 	// ========
-
 
 	// construction of the texture is handled inside createTexture(location)
 	// just bind the texture using glBindTexture when i want to use it
@@ -166,7 +170,6 @@ int main()
 	glfwSetInputMode(window, GLFW_CURSOR, GLFW_CURSOR_DISABLED);
 
 	// Set which color the window will turn into when cleared
-	glClearColor(0.2f, 0.3f, 0.5f, 1.0f);
 	glEnable(GL_DEPTH_TEST);
 
 	// Debug thing do draw in wire frame mode
@@ -183,58 +186,58 @@ int main()
 		deltaTime = currentFrame - lastFrame;
 		lastFrame = currentFrame;
 
+		// Clear screen and use background color
+		glClearColor(0.2f, 0.3f, 0.5f, 1.0f);
+		glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
+
 		// Rendering
 		// =========
 
-		// Clear screen and use background color
-		glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
-
-		shader.use();
+		// first i activate the shader for other cubes
+		cubeShader.use();
+		cubeShader.setVec3("objectColor", 1.0f, 0.5f, 0.31f);
+		cubeShader.setVec3("lightColor", 1.0f, 1.0f, 1.0f);
 
 		// Math
-		float scaler{ 1.0f };
+		// ====
 
-		glm::mat4 model = glm::mat4(1.0f);
-		// diff rotation depending on time
-		model = glm::rotate(model, (float)glfwGetTime() * glm::radians(50.0f), glm::vec3(0.5f, 1.0f, 0.0f));
-
+		// View/Projection transformations
+		glm::mat4 projection = glm::perspective(glm::radians(fov), width / height, 0.1f, 100.0f);
 		glm::mat4 view = camera.GetViewMatrix();
 
-		glm::mat4 projection;
-		projection = glm::perspective(glm::radians(fov), 800.0f / 600.0f, 0.1f, 100.0f);
+		cubeShader.setMat4("view", view);
+		cubeShader.setMat4("projection", projection);
 
+		// world transformation
+		glm::mat4 model = glm::mat4(1.0f);
+		cubeShader.setMat4("model", model);
 
-		// Uniforms
-		float timeValue = static_cast<float>(glfwGetTime());
-		float sinValue = (sin(timeValue) / 2.0f) + 0.5f;
-		shader.setFloat("sinValue", sinValue);
-
-		//shader.setMat4("model", model);
-		shader.setMat4("view", view);
-		shader.setMat4("projection", projection);
-
-		// Textures
-		glActiveTexture(GL_TEXTURE0);
-		glBindTexture(GL_TEXTURE_2D, texture0);
-		shader.setInt("texture0", 0);
-		glActiveTexture(GL_TEXTURE1);
-		glBindTexture(GL_TEXTURE_2D, texture1);
-		shader.setInt("texture1", 1);
-
-		glBindVertexArray(VAO);
-		//glDrawElements(GL_TRIANGLES, numOfTraingles * 3, GL_UNSIGNED_INT, 0);
-		
-		for (unsigned int i{ 0 }; i < 10; i++)
+		// DRAW all cubes
+		for (unsigned int i{ 0 }; i < numOfCubes; i++)
 		{
 			glm::mat4 model = glm::mat4(1.0f);
 			model = glm::translate(model, cubePositions[i]);
 			float angle{ 20.0f * i };
 			model = glm::rotate(model, glm::radians(angle), glm::vec3(1.0f, 0.3f, 0.5f));
 			model = glm::rotate(model, (float)glfwGetTime() * glm::radians(50.0f), glm::vec3(0.5f, 1.0f, 0.0f));
-			shader.setMat4("model", model);
+			cubeShader.setMat4("model", model);
 
+			glBindVertexArray(cubeVAO);
 			glDrawArrays(GL_TRIANGLES, 0, numOfTraingles);
 		}
+
+		// DRAW the lightsource, we need to use a different VAO and different Shader
+		lightSourceShader.use();
+		lightSourceShader.setMat4("projection", projection);
+		lightSourceShader.setMat4("view", view);
+
+		model = glm::mat4(1.0f);
+		model = glm::translate(model, lightPos);
+		model = glm::scale(model, glm::vec3(0.2f)); // a smaller cube
+		lightSourceShader.setMat4("model", model);
+
+		glBindVertexArray(lightSourceVAO);
+		glDrawArrays(GL_TRIANGLES, 0, 36);
 
 
 		// Swap buffers every frame to switch the image
@@ -245,10 +248,10 @@ int main()
 
 
 	// End the program, delete everything
-	glDeleteVertexArrays(1, &VAO);
-	glDeleteBuffers(1, &VBO);
+	//glDeleteVertexArrays(1, &VAO);
+	//glDeleteBuffers(1, &VBO);
 	//glDeleteBuffers(1, &EBO);
-	glDeleteProgram(shader.ID);
+	//glDeleteProgram(shader.ID);
 
 	glfwTerminate();
 	return 0;
@@ -267,7 +270,7 @@ GLFWwindow* getWindow()
 #endif
 
 	// Create window and opengl context
-	GLFWwindow* window{ glfwCreateWindow(width, height, "second attempt vro", nullptr, nullptr) };
+	GLFWwindow* window{ glfwCreateWindow(static_cast<int>(width), static_cast<int>(height), "second attempt vro", nullptr, nullptr)};
 
 	// Check for successful creation
 	if (!window)
@@ -298,9 +301,9 @@ bool GLADstatus()
 // Resize viewport on window resizing
 void framebuffer_size_callback(GLFWwindow* window, int new_width, int new_height)
 {
-	width = new_width;
-	height = new_height;
-	glViewport(0, 0, width, height);
+	width = static_cast<float>(new_width);
+	height = static_cast<float>(new_height);
+	glViewport(0, 0, new_width, new_height);
 }
 
 // Get input to close window end terminate
@@ -364,7 +367,6 @@ void mouse_callback(GLFWwindow* window, double xposIn, double yposIn)
 	lastX = xpos;
 	lastY = ypos;
 
-	std::cout << xoffset << '\n';
 	camera.ProcessMouseMovement(xoffset, yoffset);
 }
 
@@ -377,5 +379,5 @@ void scroll_callback(GLFWwindow* window, double xoffset, double yoffset)
 		fov = 1.0f;
 	if (fov > 45.0f)
 		fov = 45.0f;
-	camera.ProcessMouseScroll(yoffset);
+	camera.ProcessMouseScroll(static_cast<float>(yoffset));
 }
