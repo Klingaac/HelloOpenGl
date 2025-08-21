@@ -217,7 +217,10 @@ int main()
 		glActiveTexture(GL_TEXTURE1);
 		glBindTexture(GL_TEXTURE_2D, specularTexture);
 
+
 		// Set properties of light
+		// =======================
+
 		bool funkyColors{ false };
 
 		glm::vec3 lightColor{ glm::vec3(1.0f)};
@@ -232,10 +235,16 @@ int main()
 		glm::vec3 diffuseColor = lightColor * glm::vec3(0.7f);
 		glm::vec3 ambientColor = diffuseColor * glm::vec3(0.3f);
 
-		cubeShader.setVec3("light.position", lightPos.x, lightPos.y, lightPos.z);
+		//cubeShader.setVec3("light.direction", -0.2f, -1.0f, -0.3f);
+		cubeShader.setVec3("light.position", lightPos);
 		cubeShader.setVec3("light.ambient", ambientColor);
 		cubeShader.setVec3("light.diffuse", diffuseColor);
 		cubeShader.setVec3("light.specular", 1.0f);
+
+		// Attenuation
+		cubeShader.setFloat("light.constant", 1.0f);
+		cubeShader.setFloat("light.linear", 0.09f);
+		cubeShader.setFloat("light.quadratic", 0.032f);
 
 		// Math
 		// ====
@@ -258,9 +267,9 @@ int main()
 		{
 			model = glm::mat4(1.0f);
 			model = glm::translate(model, cubePositions[i]);
-			//float angle{ 20.0f * i };
-			//model = glm::rotate(model, glm::radians(angle), glm::vec3(1.0f, 0.3f, 0.5f));
-			//model = glm::rotate(model, (float)glfwGetTime() * glm::radians(50.0f), glm::vec3(0.5f, 1.0f, 0.0f));
+			float angle{ 20.0f * i };
+			model = glm::rotate(model, glm::radians(angle), glm::vec3(1.0f, 0.3f, 0.5f));
+			model = glm::rotate(model, (float)glfwGetTime() * glm::radians(50.0f), glm::vec3(0.5f, 1.0f, 0.0f));
 			cubeShader.setMat4("model", model);
 
 			glBindVertexArray(cubeVAO);

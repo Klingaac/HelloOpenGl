@@ -20,7 +20,8 @@ void main()
 	// Pass location of the fragment in world space
 	FragPos = vec3(model * vec4(aPos, 1.0));
 
-	// Do funky stuff with normal vector and pass it
+	// Change the normal according to its model matrixCompMult
+	// so rotating the model matrix rotates the normal
 	Normal = mat3(transpose(inverse(model))) * aNormal;
 
 	// Pass texture coordinates
