@@ -202,8 +202,26 @@ int main()
 
 		// first i activate the shader for other cubes
 		cubeShader.use();
-		cubeShader.setVec3("objectColor", 1.0f, 0.5f, 0.31f);
-		cubeShader.setVec3("lightColor", 1.0f, 1.0f, 1.0f);
+
+		// Set properties of material
+		cubeShader.setVec3("material.ambient", 1.0f, 0.5f, 0.31f);
+		cubeShader.setVec3("material.diffuse", 1.0f, 0.5f, 0.31f);
+		cubeShader.setVec3("material.specular", 0.5f, 0.5f, 0.5f);
+		cubeShader.setFloat("material.shininess", 32.0f);
+
+		// Set properties of light
+		glm::vec3 lightColor{};
+		lightColor.x = sin(glfwGetTime() * 2.0f);
+		lightColor.y = sin(glfwGetTime() * 0.7f);
+		lightColor.z = sin(glfwGetTime() * 1.3f);
+
+		glm::vec3 diffuseColor = lightColor * glm::vec3(0.5f);
+		glm::vec3 ambientColor = diffuseColor * glm::vec3(0.2f);
+
+		cubeShader.setVec3("light.position", lightPos.x, lightPos.y, lightPos.z);
+		cubeShader.setVec3("light.ambient", ambientColor);
+		cubeShader.setVec3("light.diffuse", diffuseColor);
+		cubeShader.setVec3("light.specular", 1.0f);
 
 		// Math
 		// ====
@@ -214,12 +232,12 @@ int main()
 
 		cubeShader.setMat4("view", view);
 		cubeShader.setMat4("projection", projection);
-		cubeShader.setVec3("lightPos", lightPos.x, lightPos.y, lightPos.z);
 		cubeShader.setVec3("cameraPos", camera.Position.x, camera.Position.y, camera.Position.z);
 
 		// world transformation
 		glm::mat4 model = glm::mat4(1.0f);
 		//cubeShader.setMat4("model", model);
+
 
 		// DRAW all cubes
 		for (unsigned int i{ 0 }; i < numOfCubes; i++)
