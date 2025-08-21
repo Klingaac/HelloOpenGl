@@ -151,9 +151,12 @@
   <ItemGroup>
     <Image Include="ajwm5.png" />
     <Image Include="container.jpg" />
+    <Image Include="container2.png" />
+    <Image Include="container2_specular.png" />
   </ItemGroup>
   <ItemGroup>
     <None Include="LightSourceFragment.frag" />
+    <None Include="LightSourceVertex.vert" />
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
   <ImportGroup Label="ExtensionTargets">
