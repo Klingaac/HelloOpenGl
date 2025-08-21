@@ -71,5 +71,8 @@
     <None Include="LightSourceVertex.vert">
       <Filter>Resource Files\Shaders</Filter>
     </None>
+    <None Include="DirectionLighting.frag">
+      <Filter>Resource Files\Shaders</Filter>
+    </None>
   </ItemGroup>
 </Project>

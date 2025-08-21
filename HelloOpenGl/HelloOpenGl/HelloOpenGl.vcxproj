@@ -155,6 +155,7 @@
     <Image Include="container2_specular.png" />
   </ItemGroup>
   <ItemGroup>
+    <None Include="DirectionLighting.frag" />
     <None Include="LightSourceFragment.frag" />
     <None Include="LightSourceVertex.vert" />
   </ItemGroup>
